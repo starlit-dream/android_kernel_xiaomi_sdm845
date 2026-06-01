@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: 15.0
+          ref: "15.0"
 
       - name: Install Clang 19 + cross GCC
         run: |
@@ -27,7 +27,7 @@ jobs:
 
       - name: Configure
         run: |
-          make ARCH=arm64 CC=clang \
+          make ARCH=arm64 CC=clang LLVM=1 \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
             vendor/xiaomi/mi845_defconfig
@@ -44,10 +44,12 @@ jobs:
 
       - name: Build
         run: |
-          make ARCH=arm64 CC=clang \
+          make ARCH=arm64 CC=clang LLVM=1 \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
             DTC_FLAGS="-f" \
+            CFLAGS_MODULE="-O3" \
+            KBUILD_CFLAGS="-O3 -pipe -fomit-frame-pointer" \
             -j$(nproc) Image.gz-dtb 2>&1 | tee build.log
 
       - name: Package
