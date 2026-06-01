@@ -65,7 +65,14 @@ jobs:
           git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git anykernel
           cp arch/arm64/boot/Image.gz-dtb anykernel/
           cd anykernel
-          sed -i 's/device.name1=.*/device.name1=dipper/' anykernel.sh
+          # 修复 AnyKernel3 模板：设置 dipper 设备名、清除无效 BLOCK 路径、清理模板残留
+          sed -i \
+            -e 's/device.name1=.*/device.name1=dipper/' \
+            -e 's/device.name2=.*/device.name2=/' \
+            -e 's/device.name3=.*/device.name3=/' \
+            -e 's/device.name4=.*/device.name4=/' \
+            -e 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto|' \
+            anykernel.sh
           zip -r9 kernel.zip . -x ".git/*"
 
       - name: Upload
