@@ -1,0 +1,71 @@
+name: Build Dipper Kernel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [15.0]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: 15.0
+
+      - name: Install Clang 19 + cross GCC
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            clang-19 lld-19 \
+            gcc-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabi
+          sudo ln -sf /usr/bin/clang-19 /usr/local/bin/clang
+          sudo ln -sf /usr/bin/ld.lld-19 /usr/local/bin/ld.lld
+          echo "CC=clang" >> $GITHUB_ENV
+
+      - name: Configure
+        run: |
+          make ARCH=arm64 CC=clang \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            vendor/xiaomi/mi845_defconfig
+
+          # dipper.config 碎片
+          scripts/kconfig/merge_config.sh -m -O .config \
+            arch/arm64/configs/vendor/xiaomi/mi845_defconfig \
+            arch/arm64/configs/vendor/xiaomi/dipper.config
+
+          # 补全
+          scripts/config --file .config \
+            --set-val CC_WERROR n \
+            --enable KSU
+
+      - name: Build
+        run: |
+          make ARCH=arm64 CC=clang \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            DTC_FLAGS="-f" \
+            -j$(nproc) Image.gz-dtb 2>&1 | tee build.log
+
+      - name: Package
+        run: |
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git anykernel
+          cp arch/arm64/boot/Image.gz-dtb anykernel/
+          cd anykernel
+          sed -i 's/device.name1=.*/device.name1=dipper/' anykernel.sh
+          zip -r9 kernel.zip . -x ".git/*"
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: dipper-kernel
+          path: anykernel/kernel.zip
+
+      - name: Upload log
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
