@@ -2575,6 +2575,8 @@ static void smblib_reg_work(struct work_struct *work)
 #define PD_MICRO_9V		9000000
 static int smblib_therm_charging(struct smb_charger *chg)
 {
+	/* Bypass thermal throttling */
+	return 0;
 	int thermal_icl_ua = 0;
 	int rc;
 
