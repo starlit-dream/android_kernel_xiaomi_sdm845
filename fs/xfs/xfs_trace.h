@@ -3407,6 +3407,6 @@ DEFINE_INODE_ERROR_EVENT(xfs_swap_extent_rmap_error);
 #endif /* _TRACE_XFS_H */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../fs/xfs
 #define TRACE_INCLUDE_FILE xfs_trace
 #include <trace/define_trace.h>
