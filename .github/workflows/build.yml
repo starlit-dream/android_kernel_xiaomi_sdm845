@@ -39,11 +39,12 @@ jobs:
             vendor/xiaomi/mi845_defconfig
 
           # dipper.config 碎片
-          scripts/kconfig/merge_config.sh -m -O .config \
+          scripts/kconfig/merge_config.sh -m -O . \
             arch/arm64/configs/vendor/xiaomi/mi845_defconfig \
             arch/arm64/configs/vendor/xiaomi/dipper.config
 
           # 补全
+          make ARCH=arm64 CC=clang olddefconfig
           scripts/config --file .config \
             --set-val CC_WERROR n \
             --enable KSU
