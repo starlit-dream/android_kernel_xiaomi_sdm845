@@ -47,10 +47,12 @@ jobs:
           make ARCH=arm64 CC=clang olddefconfig
           scripts/config --file .config \
             --set-val CC_WERROR n \
+            --disable COMPAT_VDSO \
             --enable KSU
 
       - name: Build
         run: |
+          set -o pipefail
           make ARCH=arm64 CC=clang \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
